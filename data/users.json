@@ -1,1 +1,17 @@
 
+{
+  "users": [
+    {
+      "id": "hendra-demo",
+      "name": "Nama Karyawan Contoh",
+      "job_title": "IT Support",
+      "department": "Information Technology",
+      "company": "DigitalCard IBL",
+      "email": "",
+      "phone": "",
+      "photo": "",
+      "active": true
+    }
+  ]
+}
+
