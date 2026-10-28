@@ -1,1 +1,314 @@
 
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08111f">
+  <meta name="description" content="Profil profesional dan kartu nama digital karyawan.">
+  <title>Profil Digital | DigitalCard IBL</title>
+
+  <style>
+    :root {
+      --bg: #08111f;
+      --panel: #101e30;
+      --blue: #57b8ff;
+      --white: #ffffff;
+      --muted: #b8c6d9;
+      --border: #293b52;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 24px 14px;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(ellipse at top, #173252 0%, transparent 55%),
+        var(--bg);
+      color: var(--white);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 430px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: rgba(16, 30, 48, 0.96);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    }
+
+    .banner {
+      height: 110px;
+      background: linear-gradient(135deg, #173252, #245b85, #57b8ff);
+    }
+
+    .content {
+      padding: 0 26px 28px;
+      text-align: center;
+    }
+
+    .avatar {
+      width: 112px;
+      height: 112px;
+      margin: -56px auto 18px;
+      display: grid;
+      place-items: center;
+      border: 4px solid var(--panel);
+      border-radius: 50%;
+      background: #203954;
+      color: var(--blue);
+      font-size: 38px;
+      font-weight: bold;
+      object-fit: cover;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 27px;
+      overflow-wrap: anywhere;
+    }
+
+    .job {
+      margin: 8px 0 4px;
+      color: var(--blue);
+      font-weight: bold;
+    }
+
+    .department,
+    .company {
+      margin: 4px 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .contact {
+      display: grid;
+      gap: 10px;
+      margin-top: 25px;
+    }
+
+    .button {
+      display: block;
+      padding: 12px 15px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--white);
+      text-decoration: none;
+      overflow-wrap: anywhere;
+    }
+
+    .button.primary {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #08111f;
+      font-weight: bold;
+    }
+
+    .button:hover {
+      opacity: 0.85;
+    }
+
+    .message {
+      padding: 28px 24px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .home {
+      display: inline-block;
+      margin-top: 12px;
+      color: var(--blue);
+      text-decoration: none;
+    }
+
+    footer {
+      padding: 15px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11px;
+      text-align: center;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="card">
+    <section id="profile" hidden>
+      <div class="banner"></div>
+
+      <div class="content">
+        <img id="photo" class="avatar" alt="Foto profil karyawan" hidden>
+        <div id="initial" class="avatar" aria-hidden="true">DC</div>
+
+        <h1 id="name">Nama Karyawan</h1>
+        <p id="job" class="job"></p>
+        <p id="department" class="department"></p>
+        <p id="company" class="company"></p>
+
+        <nav class="contact" aria-label="Informasi kontak">
+          <a id="email" class="button" hidden>Email</a>
+          <a id="phone" class="button" hidden>Telepon</a>
+          <button id="save" class="button primary" type="button">
+            Simpan Kontak
+          </button>
+        </nav>
+      </div>
+
+      <footer>DigitalCard IBL · Digital Business Card</footer>
+    </section>
+
+    <section id="message" class="message">
+      Memuat profil...
+    </section>
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const profileId = params.get("id");
+
+    const profileArea = document.getElementById("profile");
+    const messageArea = document.getElementById("message");
+
+    function setText(id, value) {
+      document.getElementById(id).textContent = value || "";
+    }
+
+    function showMessage(text) {
+      messageArea.textContent = text;
+      messageArea.hidden = false;
+      profileArea.hidden = true;
+    }
+
+    function cleanPhone(value) {
+      return String(value || "").replace(/[^\d+]/g, "");
+    }
+
+    function downloadContact(user) {
+      const escapeVcf = value => String(value || "")
+        .replace(/\\/g, "\\\\")
+        .replace(/\n/g, "\\n")
+        .replace(/,/g, "\\,")
+        .replace(/;/g, "\\;");
+
+      const vcf = [
+        "BEGIN:VCARD",
+        "VERSION:3.0",
+        "FN:" + escapeVcf(user.name),
+        "ORG:" + escapeVcf(user.company),
+        "TITLE:" + escapeVcf(user.job_title),
+        "EMAIL:" + escapeVcf(user.email),
+        "TEL:" + escapeVcf(user.phone),
+        "END:VCARD"
+      ].join("\r\n");
+
+      const blob = new Blob([vcf], {
+        type: "text/vcard;charset=utf-8"
+      });
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = (user.id || "kontak") + ".vcf";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function loadProfile() {
+      if (!profileId) {
+        showMessage("ID profil belum dicantumkan pada alamat halaman.");
+        return;
+      }
+
+      try {
+        const response = await fetch("./data/users.json");
+
+        if (!response.ok) {
+          throw new Error("Data profil tidak dapat diakses.");
+        }
+
+        const data = await response.json();
+
+        const user = data.users.find(item =>
+          item.id === profileId && item.active === true
+        );
+
+        if (!user) {
+          showMessage("Profil tidak ditemukan atau sedang tidak aktif.");
+          return;
+        }
+
+        setText("name", user.name);
+        setText("job", user.job_title);
+        setText("department", user.department);
+        setText("company", user.company);
+
+        const initials = String(user.name || "DC")
+          .trim()
+          .split(/\s+/)
+          .slice(0, 2)
+          .map(word => word.charAt(0))
+          .join("")
+          .toUpperCase();
+
+        setText("initial", initials || "DC");
+
+        if (user.photo) {
+          const photo = document.getElementById("photo");
+          photo.src = user.photo;
+          photo.hidden = false;
+          document.getElementById("initial").hidden = true;
+
+          photo.onerror = () => {
+            photo.hidden = true;
+            document.getElementById("initial").hidden = false;
+          };
+        }
+
+        if (user.email) {
+          const email = document.getElementById("email");
+          email.href = "mailto:" + user.email;
+          email.textContent = "Email: " + user.email;
+          email.hidden = false;
+        }
+
+        if (user.phone) {
+          const phone = document.getElementById("phone");
+          phone.href = "tel:" + cleanPhone(user.phone);
+          phone.textContent = "Telepon: " + user.phone;
+          phone.hidden = false;
+        }
+
+        document.getElementById("save").addEventListener("click", () => {
+          downloadContact(user);
+        });
+
+        document.title = (user.name || "Profil") + " | DigitalCard IBL";
+        messageArea.hidden = true;
+        profileArea.hidden = false;
+      } catch (error) {
+        showMessage(
+          "Profil belum dapat dimuat. Pastikan file data/users.json tersedia dan format JSON benar."
+        );
+      }
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>
+
